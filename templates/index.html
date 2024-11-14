@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GFXSYS - GMaster</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+</head>
+<body>
+
+<div class="container">
+    <aside class="sidebar">
+        <h2>GFXSYS - GMaster</h2>
+        <input type="file" id="fileInput" accept=".txt, .csv, .xlsx, .xml, .zip" /><br>
+        <button onclick="uploadFile()">Carregar Arquivo</button>
+        <ul>
+            <li onclick="transpor()"><i class="fas fa-exchange-alt"></i> Transpor</li>
+            <li onclick="inverterLinhas()"><i class="fas fa-sort-amount-down-alt"></i> Inverter Linhas</li>
+            <li onclick="contarLinhas()"><i class="fas fa-list-ol"></i> Contar Linhas</li>
+            <li onclick="detectarTipoDados()"><i class="fas fa-search"></i> Detectar Tipo de Dados</li>
+            <li onclick="renomearColunas()"><i class="fas fa-edit"></i> Renomear Colunas</li>
+            <li onclick="substituirValores()"><i class="fas fa-exchange-alt"></i> Substituir Valores</li>
+            <li onclick="preencherValores()"><i class="fas fa-fill-drip"></i> Preencher Valores</li>
+            <li onclick="colunaDinamica()"><i class="fas fa-plus-circle"></i> Coluna Dinâmica</li>
+            <li onclick="converterEmLista()"><i class="fas fa-list"></i> Converter em Lista</li>
+            <li onclick="dividirColuna()"><i class="fas fa-columns"></i> Dividir Coluna</li>
+            <li onclick="formatarColuna()"><i class="fas fa-text-width"></i> Formatar</li>
+            <li onclick="extrairColuna()"><i class="fas fa-filter"></i> Extrair</li>
+            <li onclick="estatisticas()"><i class="fas fa-chart-bar"></i> Estatísticas</li>
+            <li onclick="cleanData()"><i class="fas fa-broom"></i> Limpar Dados</li> <!-- Novo item -->
+        </ul>
+        <div class="formula-container">
+            <input type="text" id="formulaInput" placeholder="Ex: coluna1 + coluna2 * 2" />
+            <input type="text" id="newColumnName" placeholder="Nome da nova coluna" />
+            <button onclick="applyFormula()">Aplicar Fórmula</button>
+        </div>
+        
+        <br>
+        <div id="renameSection">
+            <h2>Renomear Coluna</h2>
+            <form id="renameForm">
+                <label for="currentColumn">Nome da coluna atual:</label>
+                <input type="text" id="currentColumn" required>
+    
+                <label for="novaColuna">Novo nome da coluna:</label>
+                <input type="text" id="novaColuna" required>
+    
+                <button type="button" onclick="submitRenameColumn()">Renomear</button>
+            </form>
+        </div>
+    </aside>
+
+    <main class="content">
+        <h1>Visualização de Dados</h1>
+        <div id="table-container">
+            <table id="data-table" class="display"></table>
+        </div>
+    </main>
+</div>
+
+<script>
+    function renomearColunas() {
+        // Exibe o modal para renomear colunas
+        document.getElementById('renameColumnModal').style.display = 'block';
+    }
+
+    function closeModal() {
+        // Fecha o modal
+        document.getElementById('renameColumnModal').style.display = 'none';
+    }
+</script>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
