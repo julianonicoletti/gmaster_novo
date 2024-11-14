@@ -22,6 +22,7 @@
             <li onclick="contarLinhas()"><i class="fas fa-list-ol"></i> Contar Linhas</li>
             <li onclick="detectarTipoDados()"><i class="fas fa-search"></i> Detectar Tipo de Dados</li>
             <li onclick="renomearColunas()"><i class="fas fa-edit"></i> Renomear Colunas</li>
+            <li onclick="criarColunaCalculada()"><i class="fas fa-edit"></i> Criar Coluna Calculada</li>
             <li onclick="substituirValores()"><i class="fas fa-exchange-alt"></i> Substituir Valores</li>
             <li onclick="preencherValores()"><i class="fas fa-fill-drip"></i> Preencher Valores</li>
             <li onclick="colunaDinamica()"><i class="fas fa-plus-circle"></i> Coluna Dinâmica</li>
@@ -32,24 +33,29 @@
             <li onclick="estatisticas()"><i class="fas fa-chart-bar"></i> Estatísticas</li>
             <li onclick="cleanData()"><i class="fas fa-broom"></i> Limpar Dados</li> <!-- Novo item -->
         </ul>
-        <div class="formula-container">
-            <input type="text" id="formulaInput" placeholder="Ex: coluna1 + coluna2 * 2" />
-            <input type="text" id="newColumnName" placeholder="Nome da nova coluna" />
-            <button onclick="applyFormula()">Aplicar Fórmula</button>
+
+        <div id="formula_container" style="display: none;">
+            <label for="formulaInput">Digite a fórmula:</label>
+            <input type="text" id="formulaInput" placeholder="Ex: coluna1 + coluna2 * 2">
+            <br>
+            <label for="newColumnName">Nome da Coluna Nova:</label>
+            <input type="text" id="newColumnName" placeholder="Nome da nova coluna">
+            
+            <button onclick="applyFormula()">Criar Coluna</button>
+            <button onclick="closeFormulaModal()">Cancelar</button>
         </div>
         
+        
         <br>
-        <div id="renameSection">
-            <h2>Renomear Coluna</h2>
-            <form id="renameForm">
-                <label for="currentColumn">Nome da coluna atual:</label>
-                <input type="text" id="currentColumn" required>
-    
-                <label for="novaColuna">Novo nome da coluna:</label>
-                <input type="text" id="novaColuna" required>
-    
-                <button type="button" onclick="submitRenameColumn()">Renomear</button>
-            </form>
+        <div id="renameColumnModal" style="display: none;">
+            <label for="colunaAtual">Nome Atual da Coluna:</label>
+            <input type="text" id="colunaAtual" placeholder="Nome Atual">
+            <br>
+            <label for="novaColuna">Novo Nome da Coluna:</label>
+            <input type="text" id="novaColuna" placeholder="Novo Nome">
+        
+            <button onclick="submitRenameColumn()">Renomear</button>
+            <button onclick="closeModal()">Cancelar</button>
         </div>
     </aside>
 
@@ -62,6 +68,17 @@
 </div>
 
 <script>
+    // Função para exibir o modal de fórmula
+    function criarColunaCalculada() {
+        document.getElementById('formula_container').style.display = 'block';
+    }
+
+    // Função para fechar o modal de fórmula
+    function closeFormulaModal() {
+        document.getElementById('formula_container').style.display = 'none';
+    }
+
+
     function renomearColunas() {
         // Exibe o modal para renomear colunas
         document.getElementById('renameColumnModal').style.display = 'block';

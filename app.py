@@ -367,9 +367,9 @@ def rename_column():
 
     # Renomeia a coluna
     df.rename(columns={current_column: new_column_name}, inplace=True)
-
+    print(df.head())
     # Retorne o DataFrame atualizado
-    data = df.to_dict(orient="records")
+    data = df.fillna("null").to_dict(orient='records')
     return jsonify(data)
 
 

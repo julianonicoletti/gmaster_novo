@@ -117,6 +117,8 @@ async function cleanData() {
 async function applyFormula() {
     const formula = document.getElementById('formulaInput').value;
     const newColumnName = document.getElementById('newColumnName').value;
+    console.log("Nova coluna:", newColumnName);
+    console.log("Fórmula:", formula);
 
     if (!formula) {
         alert("Por favor, insira uma fórmula.");
@@ -168,7 +170,7 @@ async function applyFormula() {
 }
 
 async function submitRenameColumn() {
-    const currentColumn = document.getElementById('currentColumn').value;
+    const currentColumn = document.getElementById('colunaAtual').value;
     const newColumnName = document.getElementById('novaColuna').value;
 
     console.log("Nome da coluna atual:", currentColumn);
@@ -196,7 +198,8 @@ async function submitRenameColumn() {
 
         const result = await response.json();
         alert("Coluna renomeada com sucesso!");
-        initializeTable(result.data); // Atualiza a tabela com os novos nomes de coluna
+        rawData = result;
+        initializeTable(rawData); // Atualiza a tabela com os novos nomes de coluna
         closeModal();
     } catch (error) {
         console.error("Erro:", error);
