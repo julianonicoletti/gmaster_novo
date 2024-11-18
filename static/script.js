@@ -114,7 +114,7 @@ async function cleanData() {
 }
 
 // Função para aplicar fórmula personalizada
-async function applyFormula() {
+async function calcularNovaColuna() {
     const formula = document.getElementById('formulaInput').value;
     const newColumnName = document.getElementById('newColumnName').value;
     console.log("Nova coluna:", newColumnName);
@@ -140,7 +140,7 @@ async function applyFormula() {
     const coluna2 = match[3];  // Ex: coluna2
 
     try {
-        const response = await fetch('http://127.0.0.1:5000/apply_formula', {
+        const response = await fetch('http://127.0.0.1:5000/calcular_nova_coluna', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

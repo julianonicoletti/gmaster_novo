@@ -271,8 +271,8 @@ def clean_data():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/apply_formula', methods=['POST'])
-def apply_formula():
+@app.route('/calcular_nova_coluna', methods=['POST'])
+def calcular_nova_coluna():
     # global df
     data = request.json
     df = pd.DataFrame(data['data'])
