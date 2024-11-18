@@ -333,6 +333,35 @@ def rename_column():
     data = df.fillna("null").to_dict(orient='records')
     return jsonify(data)
 
+@app.route('/replace_value', methods=['POST'])
+def replace_value():
+    data = request.json
+    column = data.get('column')
+    old_value = float(data.get('oldValue')) if data.get('oldValue') is not None else data.get('oldValue')
+    new_value = float(data.get('newValue')) if data.get('newValue') is not None else data.get('newValue')
+    df = pd.DataFrame(data['data'])
+    print(column, old_value, new_value)
+
+    # Verifica se os parâmetros estão presentes
+    if not column or old_value is None or new_value is None:
+        return jsonify({"error": "Parâmetros incompletos"}), 400
+
+    try:
+        # Converte a coluna para string antes de fazer a substituição
+        #df[column] = df[column].astype(str)
+
+        # Substitui o valor antigo pelo novo
+        # old_value = float(old_value)
+        # new_value = float(new_value)
+        print(old_value, new_value)
+        df[column] = df[column].replace(str(old_value), str(new_value))
+        print(df.head())
+        # Preenche valores NaN com "null" para compatibilidade JSON
+        updated_data = df.fillna("null").to_dict(orient='records')
+        return jsonify(updated_data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)

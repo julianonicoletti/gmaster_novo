@@ -56,6 +56,22 @@
             <button onclick="submitRenameColumn()">Renomear</button>
             <button onclick="closeModal()">Cancelar</button>
         </div>
+
+        <div id="replaceValueModal" style="display: none;">
+            <h3>Substituir Valores</h3>
+            <label for="columnName">Nome da Coluna:</label>
+            <input type="text" id="columnName" placeholder="Digite o nome da coluna"><br>
+        
+            <label for="currentValue">Valor Atual:</label>
+            <input type="text" id="currentValue" placeholder="Digite o valor atual"><br>
+        
+            <label for="newValue">Novo Valor:</label>
+            <input type="text" id="newValue" placeholder="Digite o novo valor"><br>
+        
+            <button onclick="trocarValor()">Substituir</button>
+            <button onclick="closeReplaceValueModal()">Cancelar</button>
+        </div>
+        
     </aside>
 
     <main class="content">
@@ -86,6 +102,15 @@
     function closeModal() {
         // Fecha o modal
         document.getElementById('renameColumnModal').style.display = 'none';
+    }
+
+    function substituirValores() {
+        document.getElementById('replaceValueModal').style.display = 'block';
+    }
+
+    // Função para fechar o modal de substituir valores
+    function closeReplaceValueModal() {
+        document.getElementById('replaceValueModal').style.display = 'none';
     }
 </script>
 

@@ -194,3 +194,66 @@ async function submitRenameColumn() {
         alert("Falha ao renomear a coluna.");
     }
 }
+async function trocarValor() {
+    const columnName = document.getElementById('columnName').value;
+    const currentValue = document.getElementById('currentValue').value;
+    const newValue = document.getElementById('newValue').value;
+
+    if (!columnName || !currentValue || !newValue) {
+        alert("Por favor, preencha todos os campos.");
+        return;
+    }
+
+    // Enviar os dados para o backend (exemplo de integração)
+    const requestData = {
+        column: columnName,
+        oldValue: currentValue,
+        newValue: newValue,
+        data: rawData
+    };
+
+    try {
+        const response = await fetch('http://127.0.0.1:5000/replace_value', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+        });
+
+        if (!response.ok) {
+            const errorResult = await response.json();
+            alert("Erro: " + errorResult.error);
+            return;
+        }
+
+        const result = await response.json();
+        alert("Valores Substituídos com sucesso!");
+        rawData = result;
+        initializeTable(rawData); // Atualiza a tabela com os novos 
+        closeModal();
+    } catch (error) {
+        console.error("Erro:", error);
+        alert("Falha ao renomear a coluna.");
+    }
+    // fetch('/replace_value', {
+    //     method: 'POST',
+    //     headers: {
+    //         'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify(requestData),
+    // })
+    //     .then(response => response.json())
+    //     .then(data => {
+    //         if (data.error) {
+    //             alert("Erro: " + data.error);
+    //         } else {
+    //             alert("Valores substituídos com sucesso!");
+    //             closeReplaceValueModal();
+    //         }
+    //     })
+    //     .catch(error => {
+    //         console.error("Erro ao substituir valores:", error);
+    //     });
+}
+
