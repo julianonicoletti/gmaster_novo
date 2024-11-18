@@ -4,6 +4,7 @@ import os
 import xml.etree.ElementTree as ElementTree
 from io import StringIO, BytesIO
 import chardet
+import re
 import zipfile
 from database_manager import DatabaseConnectionManager
 
@@ -229,34 +230,6 @@ def upload_file():
         print(f"Erro ao processar o arquivo: {e}")
         return jsonify({"error": f"Failed to process the file: {str(e)}"}), 500
     
-@app.route('/download_csv', methods=['POST'])
-def download_csv():
-    global df
-    file = request.files.get('file')
-    if not file:
-        return jsonify({"error": "Nenhum arquivo foi enviado"}), 400
-
-    try:
-        df = pd.read_csv(
-            file.stream,
-            encoding='latin1',
-            delimiter='|',
-            skipinitialspace=True,
-            on_bad_lines='skip'
-        )
-        df.columns = ['Column1', 'Column2', 'Column3', 'Column4', 'Column5', 'Column6', 'Column7', 'Column8']
-        df = df.dropna(axis=1, how='all')
-
-        output = BytesIO()
-        df.to_csv(output, index=False, encoding='utf-8')
-        output.seek(0)
-
-        return send_file(output, mimetype='text/csv', as_attachment=True, download_name='arquivo_ajustado.csv')
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
 @app.route('/clean_data', methods=['POST'])
 def clean_data():
     global df
@@ -272,49 +245,37 @@ def clean_data():
         return jsonify({"error": str(e)}), 500
 
 @app.route('/calcular_nova_coluna', methods=['POST'])
-def calcular_nova_coluna():
-    # global df
+def calcular_nova_coluna():   
     data = request.json
+    print(data.get('formula'))
+    print(data.get('new_column'))
     df = pd.DataFrame(data['data'])
-    column1 = data.get('coluna1')
-    column2 = data.get('coluna2')
-    operation = data.get('operador')
+    formula = data.get('formula')
     new_column_name = data.get('new_column')
-    if not column1 or not column2 or not operation:
-        return jsonify({"error": "Parâmetros incompletos"}), 400
-    
+    print(formula)
+
+    if not formula:
+        return jsonify({"error": "Fórmula não fornecida"}), 400
     if not new_column_name:
-        new_column_name = f"{column1}_{operation}_{column2}"
-    
-    print(new_column_name)
-    # Verificação se as colunas e operação são válidas
-    
+        new_column_name = f"{formula} (Nova)"
 
-    if column1 not in df.columns or column2 not in df.columns:
-        return jsonify({"error": "Colunas inválidas"}), 400
-
+    # Substituir os nomes das colunas por df['coluna']
+    for col in df.columns:
+        if col in formula:
+            # Converter a coluna para tipo numérico, substituindo erros por NaN
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+            formula = formula.replace(col, f"df['{col}']")
+    
     try:
-        # Converte as colunas para tipo numérico, substituindo erros por NaN
-        df[column1] = pd.to_numeric(df[column1], errors='coerce')
-        df[column2] = pd.to_numeric(df[column2], errors='coerce')
+        # Avaliar a fórmula
+        df[new_column_name] = eval(formula)
 
-        # Realizando a operação solicitada
-        if operation == '+':
-            df[new_column_name] = df[column1].fillna(0) + df[column2].fillna(0)
-            df[new_column_name] = df[new_column_name].where(df[column1].notna() | df[column2].notna(), None)
-        elif operation == '-':
-            df[new_column_name] = df[column1] - df[column2]
-        elif operation == '*' or operation == 'x':
-            df[new_column_name] = df[column1] * df[column2]
-        elif operation == '/':
-            # Tratamento para evitar divisão por zero
-            df[new_column_name] = df[column1] / df[column2].replace(0, None)
-            df[new_column_name] = round(df[new_column_name], 4)
-        else:
-            return jsonify({"error": "Operação inválida"}), 400
-        
-        print(df.head())
+        # Converter NaN para "null" para compatibilidade JSON
         data = df.fillna("null").to_dict(orient='records')
+        return jsonify(data)
+    except Exception as e:
+        print("Erro ao aplicar fórmula:", str(e))
+        return jsonify({"error": str(e)}), 500
 
         return jsonify(data)
     except Exception as e:

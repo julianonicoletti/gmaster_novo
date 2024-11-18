@@ -125,49 +125,37 @@ async function calcularNovaColuna() {
         return;
     }
 
-    const regex = /(\w+)\s*([+\-*/x])\s*(\w+)/;  
-  // Regex para capturar as colunas e o operador
-    const match = formula.match(regex);
-
-    if (!match) {
-        alert("Fórmula inválida. A fórmula deve ser no formato: coluna1 operador coluna2.");
+    const regex = /^[\w\d\s()+\-*/x.]+$/; // Permitir colunas, números, operadores matemáticos e espaços
+    if (!regex.test(formula)) {
+        alert("Fórmula inválida. Use apenas operadores matemáticos (+, -, *, /), parênteses, números e nomes de colunas.");
         return;
     }
 
-    // Atribui as partes separadas
-    const coluna1 = match[1];  // Ex: coluna1
-    const operador = match[2];  // Ex: '+'
-    const coluna2 = match[3];  // Ex: coluna2
-
     try {
+        // Enviar dados para o backend
         const response = await fetch('http://127.0.0.1:5000/calcular_nova_coluna', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                data: rawData,
-                coluna1: coluna1,
-                coluna2: coluna2,
-                operador: operador,
-                new_column: newColumnName
+                formula: formula,
+                new_column: newColumnName,
+                data: rawData // Substitua por seus dados reais do DataFrame
             })
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-            alert("Erro: " + result.error);
-            return;
+        });    
+    
+        if (response.ok) {
+            const result = await response.json();
+            rawData = result;
+            initializeTable(rawData); // Função para atualizar a tabela no frontend
+        } else {
+            const error = await response.json();
+            alert(`Erro: ${error.error}`);
         }
-
-        rawData = result;
-        initializeTable(rawData); // Atualiza a tabela com a nova coluna
     } catch (error) {
-        console.error("Erro:", error);
-        alert("Falha ao aplicar a fórmula.");
+        console.error("Erro ao aplicar a fórmula:", error);
+        alert("Erro ao aplicar a fórmula. Verifique o console para mais detalhes.");
     }
-}
+}       
 
 async function submitRenameColumn() {
     const currentColumn = document.getElementById('colunaAtual').value;
