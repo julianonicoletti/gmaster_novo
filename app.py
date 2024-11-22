@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify, send_file
 import pandas as pd
 import os
+import numpy as np
 import xml.etree.ElementTree as ElementTree
 from io import StringIO, BytesIO
 import chardet
@@ -69,8 +70,8 @@ def load_from_db():
         
         for col in df.select_dtypes(include=['datetime64']):
             df[col] = df[col].astype(str)
-        
-        data = df.to_dict(orient="records")
+        data = df.fillna("null").to_dict(orient='records')
+        #data = df.to_dict(orient="records")
         
         print(f"Dados carregados com sucesso: {len(data)} registros encontrados")
         return jsonify({
@@ -206,24 +207,16 @@ def upload_file():
 
             content = raw_data.decode(encoding, errors='replace')
             df = pd.read_csv(StringIO(content), sep=None, on_bad_lines='skip', quotechar='"', skipinitialspace=True)
-            df = df.where(pd.notnull(df), 'N/A')
+            
             print(df.head())
 
-            data = df.to_dict(orient='records')
+            data = df.fillna("null").to_dict(orient='records')
             print("Arquivo CSV lido com sucesso.")
 
         else:
             print("Tipo de arquivo não suportado.")
             return jsonify({"error": "File type not supported"}), 400
-
-        # Processa os dados
-        for item in data:
-            for key, value in item.items():
-                if isinstance(value, (int, float)):
-                    item[key] = str(value)
-                elif pd.isna(value):
-                    item[key] = "N/A"
-
+       
         return jsonify(data)
 
     except Exception as e:
@@ -276,12 +269,7 @@ def calcular_nova_coluna():
     except Exception as e:
         print("Erro ao aplicar fórmula:", str(e))
         return jsonify({"error": str(e)}), 500
-
-        return jsonify(data)
-    except Exception as e:
-        # Exibe o erro detalhado no console do Flask
-        print("Erro ao adicionar nova coluna:", str(e))
-        return jsonify({"error": str(e)}), 500
+    
 
 @app.route('/transpor', methods=['POST'])
 def transpor():
@@ -337,8 +325,8 @@ def rename_column():
 def replace_value():
     data = request.json
     column = data.get('column')
-    old_value = float(data.get('oldValue')) if data.get('oldValue') is not None else data.get('oldValue')
-    new_value = float(data.get('newValue')) if data.get('newValue') is not None else data.get('newValue')
+    old_value = data.get('oldValue')
+    new_value = data.get('newValue')
     df = pd.DataFrame(data['data'])
     print(column, old_value, new_value)
 
@@ -347,20 +335,24 @@ def replace_value():
         return jsonify({"error": "Parâmetros incompletos"}), 400
 
     try:
-        # Converte a coluna para string antes de fazer a substituição
-        #df[column] = df[column].astype(str)
+        # Converte os valores para numéricos (inteiros ou flutuantes)
+        old_value = float(old_value)
+        new_value = float(new_value)
+
+        # Converte a coluna para tipo numérico antes de substituir os valores
+        df[column] = pd.to_numeric(df[column], errors='coerce')
 
         # Substitui o valor antigo pelo novo
-        # old_value = float(old_value)
-        # new_value = float(new_value)
-        print(old_value, new_value)
-        df[column] = df[column].replace(str(old_value), str(new_value))
+        df[column] = df[column].replace(old_value, new_value)
+
         print(df.head())
+        
         # Preenche valores NaN com "null" para compatibilidade JSON
         updated_data = df.fillna("null").to_dict(orient='records')
         return jsonify(updated_data)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 
 if __name__ == '__main__':

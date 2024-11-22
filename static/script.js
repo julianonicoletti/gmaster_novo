@@ -146,7 +146,8 @@ async function calcularNovaColuna() {
         if (response.ok) {
             const result = await response.json();
             rawData = result;
-            initializeTable(rawData); // Função para atualizar a tabela no frontend
+            initializeTable(rawData);
+            closeFormulaModal(); // Função para atualizar a tabela no frontend
         } else {
             const error = await response.json();
             alert(`Erro: ${error.error}`);
@@ -236,24 +237,53 @@ async function trocarValor() {
         console.error("Erro:", error);
         alert("Falha ao renomear a coluna.");
     }
-    // fetch('/replace_value', {
-    //     method: 'POST',
-    //     headers: {
-    //         'Content-Type': 'application/json',
-    //     },
-    //     body: JSON.stringify(requestData),
-    // })
-    //     .then(response => response.json())
-    //     .then(data => {
-    //         if (data.error) {
-    //             alert("Erro: " + data.error);
-    //         } else {
-    //             alert("Valores substituídos com sucesso!");
-    //             closeReplaceValueModal();
-    //         }
-    //     })
-    //     .catch(error => {
-    //         console.error("Erro ao substituir valores:", error);
-    //     });
+
 }
 
+function carregarBancoDeDados() {
+    const dbType = document.getElementById('dbType').value;
+    const dbTable = document.getElementById('dbTable').value;
+
+    if (!dbTable) {
+        alert("Por favor, insira o nome da tabela.");
+        return;
+    }
+
+    fetch('/set_database', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ db_type: dbType })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(`Erro ao configurar o banco: ${data.error}`);
+            return;
+        }
+
+        fetch(`/load_from_db?table=${encodeURIComponent(dbTable)}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(`Erro ao carregar dados: ${data.error}`);
+            } else {
+                alert(`Dados carregados com sucesso: ${data.row_count} registros encontrados.`);
+                rawData = data.data; // Atualiza os dados carregados
+                initializeTable(rawData); // Atualiza a tabela
+                closeDatabaseModal();
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar dados:', error);
+            alert('Erro ao carregar dados.');
+        });
+    })
+    .catch(error => {
+        console.error('Erro ao configurar banco:', error);
+        alert('Erro ao configurar o banco de dados.');
+    });
+}

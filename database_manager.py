@@ -32,8 +32,9 @@ class DatabaseConnectionManager:
             raise ValueError(f"Tipo de banco de dados não suportado. Opções válidas: {list(self.supported_dbs.keys())}")
             
         db_config = self.supported_dbs[db_type]
-        env_path = Path('.') / db_config['env_file']
-        
+        base_dir = Path(__file__).resolve().parent
+        env_path = base_dir / db_config['env_file']
+               
         print(f"Tentando carregar configurações de: {env_path.absolute()}")
         
         # Adicione uma verificação se o arquivo existe

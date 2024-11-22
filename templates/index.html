@@ -13,9 +13,11 @@
 
 <div class="container">
     <aside class="sidebar">
-        <h2>GFXSYS - GMaster</h2>
-        <input type="file" id="fileInput" accept=".txt, .csv, .xlsx, .xml, .zip" /><br>
-        <button onclick="uploadFile()">Carregar Arquivo</button>
+        <<h2>GFXSYS - GMaster</h2>
+        <input type="file" id="fileInput" accept=".txt, .csv, .xlsx, .xml, .zip" style="display: none;" onchange="uploadFile()" />
+        <button class="btn-upload" onclick="document.getElementById('fileInput').click()"><i class="fas fa-file"></i> Carregar Arquivo
+        </button>
+        <button class="btn-database" onclick="abrirBancoDeDados()"><i class="fas fa-database"></i> Carregar Banco de Dados</button>
         <ul>
             <li onclick="transpor()"><i class="fas fa-exchange-alt"></i> Transpor</li>
             <li onclick="inverterLinhas()"><i class="fas fa-sort-amount-down-alt"></i> Inverter Linhas</li>
@@ -74,6 +76,26 @@
         
     </aside>
 
+    <div id="databaseModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Carregar Banco de Dados</h3>
+            <label for="dbType">Tipo de Banco:</label>
+            <select id="dbType" class="input-field">
+                <option value="postgres">PostgreSQL</option>
+                <option value="sqlite">SQLite</option>
+                <option value="mysql">MySQL</option>
+            </select>
+            <br>
+            <label for="dbTable">Tabela:</label>
+            <input type="text" id="dbTable" class="input-field" placeholder="Digite o nome da tabela">
+            <br>
+            <div class="modal-buttons">
+                <button onclick="carregarBancoDeDados()" class="btn">Conectar e Carregar</button>
+                <button onclick="closeDatabaseModal()" class="btn cancel-btn">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
     <main class="content">
         <h1>Visualização de Dados</h1>
         <div id="table-container">
@@ -81,6 +103,8 @@
         </div>
     </main>
 </div>
+
+
 
 <script>
     // Função para exibir o modal de fórmula
@@ -111,6 +135,13 @@
     // Função para fechar o modal de substituir valores
     function closeReplaceValueModal() {
         document.getElementById('replaceValueModal').style.display = 'none';
+    }
+    function abrirBancoDeDados() {
+        document.getElementById('databaseModal').style.display = 'block';
+    }
+
+    function closeDatabaseModal() {
+        document.getElementById('databaseModal').style.display = 'none';
     }
 </script>
 

@@ -14,7 +14,7 @@ body {
 }
 
 .sidebar {
-    background-color: #26487b; /* Cor de fundo ajustada */
+    background-color: #26487b;
     color: white;
     width: 250px;
     padding: 20px;
@@ -22,13 +22,6 @@ body {
     flex-direction: column;
     align-items: flex-start;
 }
-
-.data-type-row {
-    font-weight: bold;
-    background-color: #f0f0f0;
-    color: #333;
-}
-
 
 .sidebar h2 {
     color: #ffffff;
@@ -43,7 +36,7 @@ body {
 }
 
 .sidebar ul li {
-    padding: 10px;
+    padding: 6px;
     cursor: pointer;
     color: #ffffff;
     font-size: 16px;
@@ -53,36 +46,9 @@ body {
 }
 
 .sidebar ul li:hover {
-    background-color: #1d3a61; /* Efeito de hover */
-    border-left: 4px solid #ffffff; /* Indicador na borda esquerda */
-    padding-left: 16px;
-}
-
-.sidebar ul li i {
-    margin-right: 10px; /* Espaço entre ícone e texto */
-}
-
-.sidebar ul li.active {
     background-color: #1d3a61;
     border-left: 4px solid #ffffff;
     padding-left: 16px;
-}
-
-.sidebar ul li ul {
-    list-style: none;
-    padding: 0;
-    padding-left: 20px;
-}
-
-.sidebar ul li ul li {
-    padding: 8px 0;
-    font-size: 14px;
-    color: #b3c4e0;
-    cursor: pointer;
-}
-
-.sidebar ul li ul li:hover {
-    color: #ffffff;
 }
 
 .content {
@@ -90,4 +56,159 @@ body {
     padding: 20px;
     background-color: #f4f4f9;
     overflow-y: auto;
+}
+
+/* Estilos para o Modal */
+.modal {
+    display: none;  /* Inicialmente escondido */
+    position: fixed;
+    z-index: 1; /* Fica sobre outros elementos */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Fundo semitransparente */
+    overflow: auto;
+    padding-top: 60px;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 5% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 50%;
+    max-width: 600px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+h3 {
+    color: #26487b;
+    font-size: 22px;
+    margin-bottom: 15px;
+}
+
+.input-field {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+.input-field:focus {
+    border-color: #26487b;
+    outline: none;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.btn {
+    background-color: #26487b;
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn:hover {
+    background-color: #1d3a61;
+}
+
+.cancel-btn {
+    background-color: #f44336;
+}
+
+.cancel-btn:hover {
+    background-color: #e53935;
+}
+
+/* Botões */
+button {
+    font-size: 15px;
+    padding: 12px 20px;
+    margin: 8px 0;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Botão de Carregar Arquivo */
+.btn-upload {
+    background-color: #4CAF50; /* Verde */
+    color: white;
+}
+.btn-upload i {
+    margin-right: 8px; /* Espaçamento de 8px entre o ícone e o texto */
+    font-size: 17px; /* Tamanho do ícone */
+}
+
+.btn-upload:hover {
+    background-color: #45a049; /* Cor de hover */
+    transform: translateY(-2px) scale(1.05); /* Levanta o botão */
+}
+
+/* Botão de Carregar Banco de Dados */
+.btn-database {
+    background-color: #4CAF50; /* Azul */
+    color: white;
+}
+
+.btn-database i {
+    margin-right: 8px; /* Espaço entre o ícone e o texto */
+    font-size: 17px; /* Tamanho do ícone */
+}
+
+.btn-database:hover {
+    background-color: #45a049; /* Cor de hover */
+    transform: translateY(-2px) scale(1.05); /* Levanta o botão */
+}
+
+/* Botão quando desabilitado */
+button:disabled {
+    background-color: #ccc;
+    color: #666;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Estilos adicionais para o layout */
+h2 {
+    color: #26487b;
+    margin-bottom: 20px;
+}
+
+input[type="file"] {
+    font-size: 15px;
+    padding: 8px;
+    margin-bottom: 0px;
+    border-radius: 6px;
+    
+    width: 100%;
+}
+
+input[type="file"]:hover {
+    border-color: #26487b;
 }
