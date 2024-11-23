@@ -212,3 +212,78 @@ input[type="file"] {
 input[type="file"]:hover {
     border-color: #26487b;
 }
+
+.sidebar-section {
+    background-color: #1d3a61; /* Cor de fundo consistente com a sidebar */
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 8px;
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Espaço entre os elementos */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Efeito de profundidade */
+}
+
+.sidebar-section h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: #ffffff;
+    text-align: left;
+}
+
+.sidebar-section label {
+    font-size: 14px;
+    color: #b3c4e0;
+}
+
+.sidebar-section input {
+    padding: 8px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    background-color: #ffffff;
+    color: #333;
+    outline: none;
+}
+
+.sidebar-section input:focus {
+    border: 2px solid #26487b; /* Realce ao focar */
+}
+
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.btn-action {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.3s;
+}
+
+.btn-action:hover {
+    background-color: #45a049;
+    transform: scale(1.05); /* Leve efeito ao passar o mouse */
+}
+
+.btn-cancel {
+    background-color: #f44336;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.3s;
+}
+
+.btn-cancel:hover {
+    background-color: #e31b0c;
+    transform: scale(1.05); /* Leve efeito ao passar o mouse */
+}
+

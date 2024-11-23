@@ -20,11 +20,47 @@ function initializeTable(data) {
         ordering: true,
         autoWidth: true,
         scrollX: true,   // Habilita a rolagem horizontal
-        scrollY: '85vh', // Limita a altura da tabela (opcional)
+        scrollY: '90vh', // Limita a altura da tabela (opcional)
         scrollCollapse: true, // Reduz a tabela caso não haja dados suficientes
         fixedHeader: true  // Fixa o cabeçalho da tabela quando rolar
     });
 }
+
+function updateHistory(operation) {
+    const historyList = document.getElementById('historyList');
+    const newItem = document.createElement('li');
+    newItem.textContent = operation;
+    historyList.appendChild(newItem);
+}
+
+function fetchHistory() {
+    fetch('/get_history')
+        .then(response => response.json())
+        .then(data => {
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '';
+            data.forEach(item => {
+                const listItem = document.createElement('li');
+                listItem.textContent = item.operation;
+                historyList.appendChild(listItem);
+            });
+        });
+}
+
+function undoLastOperation() {
+    fetch('/undo', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else {
+                // Atualiza a tabela com o estado anterior
+                initializeTable(data);
+                fetchHistory();
+            }
+        });
+}
+
 
 async function uploadFile() {
     const fileInput = document.getElementById('fileInput');
@@ -176,7 +212,7 @@ async function submitRenameColumn() {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ currentColumn, newColumnName })
+            body: JSON.stringify({ currentColumn, newColumnName, rawData })
         });
 
         if (!response.ok) {

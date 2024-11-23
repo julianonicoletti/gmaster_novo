@@ -22,9 +22,9 @@
             <li onclick="transpor()"><i class="fas fa-exchange-alt"></i> Transpor</li>
             <li onclick="inverterLinhas()"><i class="fas fa-sort-amount-down-alt"></i> Inverter Linhas</li>
             <li onclick="detectarTipoDados()"><i class="fas fa-search"></i> Detectar Tipo de Dados</li>
-            <li onclick="renomearColunas()"><i class="fas fa-edit"></i> Renomear Colunas</li>
-            <li onclick="criarColunaCalculada()"><i class="fas fa-edit"></i> Criar Coluna Calculada</li>
-            <li onclick="substituirValores()"><i class="fas fa-exchange-alt"></i> Substituir Valores</li>
+            <li onclick="toggleModal('renameColumnModal')"><i class="fas fa-edit"></i> Renomear Colunas</li>
+            <li onclick="toggleModal('formula_container')"><i class="fas fa-edit"></i> Criar Coluna Calculada</li>
+            <li onclick="toggleModal('replaceValueModal')"><i class="fas fa-exchange-alt"></i> Substituir Valores</li>
             <li onclick="preencherValores()"><i class="fas fa-fill-drip"></i> Preencher Valores</li>
             <li onclick="colunaDinamica()"><i class="fas fa-plus-circle"></i> Coluna Dinâmica</li>
             <li onclick="converterEmLista()"><i class="fas fa-list"></i> Converter em Lista</li>
@@ -35,44 +35,44 @@
             <li onclick="cleanData()"><i class="fas fa-broom"></i> Limpar Dados</li> <!-- Novo item -->
         </ul>
 
-        <div id="formula_container" style="display: none;">
-            <label for="formulaInput">Digite a fórmula:</label>
+        <div class="sidebar-section" id="formula_container" style="display: none;">
+            <h3>Criar Nova Coluna</h3>
+            <label for="formulaInput">Fórmula:</label>
             <input type="text" id="formulaInput" placeholder="Ex: coluna1 + coluna2 * 2">
-            <br>
-            <label for="newColumnName">Nome da Coluna Nova:</label>
+            <label for="newColumnName">Nome da Nova Coluna:</label>
             <input type="text" id="newColumnName" placeholder="Nome da nova coluna">
-            
-            <button onclick="calcularNovaColuna()">Criar Coluna</button>
-            <button onclick="closeFormulaModal()">Cancelar</button>
+            <div class="button-group">
+                <button class="btn-action" onclick="calcularNovaColuna()">Criar</button>
+                <button class="btn-cancel" onclick="closeFormulaModal()">Cancelar</button>
+            </div>
         </div>
         
-        
-        <br>
-        <div id="renameColumnModal" style="display: none;">
-            <label for="colunaAtual">Nome Atual da Coluna:</label>
+        <div class="sidebar-section" id="renameColumnModal" style="display: none;">
+            <h3>Renomear Coluna</h3>
+            <label for="colunaAtual">Nome Atual:</label>
             <input type="text" id="colunaAtual" placeholder="Nome Atual">
-            <br>
-            <label for="novaColuna">Novo Nome da Coluna:</label>
+            <label for="novaColuna">Novo Nome:</label>
             <input type="text" id="novaColuna" placeholder="Novo Nome">
-        
-            <button onclick="submitRenameColumn()">Renomear</button>
-            <button onclick="closeModal()">Cancelar</button>
+            <div class="button-group">
+                <button class="btn-action" onclick="submitRenameColumn()">Renomear</button>
+                <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+            </div>
         </div>
-
-        <div id="replaceValueModal" style="display: none;">
+        
+        <div class="sidebar-section" id="replaceValueModal" style="display: none;">
             <h3>Substituir Valores</h3>
-            <label for="columnName">Nome da Coluna:</label>
-            <input type="text" id="columnName" placeholder="Digite o nome da coluna"><br>
-        
+            <label for="columnName">Coluna:</label>
+            <input type="text" id="columnName" placeholder="Nome da coluna">
             <label for="currentValue">Valor Atual:</label>
-            <input type="text" id="currentValue" placeholder="Digite o valor atual"><br>
-        
+            <input type="text" id="currentValue" placeholder="Valor atual">
             <label for="newValue">Novo Valor:</label>
-            <input type="text" id="newValue" placeholder="Digite o novo valor"><br>
-        
-            <button onclick="trocarValor()">Substituir</button>
-            <button onclick="closeReplaceValueModal()">Cancelar</button>
+            <input type="text" id="newValue" placeholder="Novo valor">
+            <div class="button-group">
+                <button class="btn-action" onclick="trocarValor()">Substituir</button>
+                <button class="btn-cancel" onclick="closeReplaceValueModal()">Cancelar</button>
+            </div>
         </div>
+        
         
     </aside>
 
@@ -101,12 +101,43 @@
         <div id="table-container">
             <table id="data-table" class="display"></table>
         </div>
+        <div id="historyContainer" class="history">
+            <h3>Histórico de Transformações</h3>
+            <ul id="historyList"></ul>
+            <button onclick="undoLastOperation()">Desfazer Última Operação</button>
+        </div>
+
     </main>
 </div>
 
 
 
 <script>
+
+    function toggleModal(modalId) {
+        // Fecha todos os modais
+        document.querySelectorAll('.sidebar-section').forEach(modal => {
+            modal.style.display = 'none';
+        });
+    
+        // Abre o modal especificado
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'block';
+        }
+    }
+
+    function openSection(sectionId) {
+        document.querySelectorAll('.sidebar-section').forEach(section => {
+            section.style.display = 'none';
+        });
+        document.getElementById(sectionId).style.display = 'block';
+    }
+    
+    function closeSection(sectionId) {
+        document.getElementById(sectionId).style.display = 'none';
+    }
+    
     // Função para exibir o modal de fórmula
     function criarColunaCalculada() {
         document.getElementById('formula_container').style.display = 'block';

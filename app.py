@@ -1,5 +1,7 @@
-from flask import Flask, render_template, request, jsonify, send_file
+from flask import Flask, render_template, request, jsonify, send_file, session
+from flask_session import Session
 import pandas as pd
+import redis
 import os
 import numpy as np
 import xml.etree.ElementTree as ElementTree
@@ -9,10 +11,81 @@ import re
 import zipfile
 from database_manager import DatabaseConnectionManager
 
+
+
 app = Flask(__name__, template_folder="templates")
+app.secret_key = os.urandom(24)
+
+app.config['SESSION_TYPE'] = 'redis'
+app.config['SESSION_PERMANENT'] = False
+app.config['SESSION_USE_SIGNER'] = True  # Para assinar cookies
+app.config['SESSION_REDIS'] = redis.StrictRedis(host='localhost', port=6379, db=0)
+
+Session(app)
 
 # Instância global do gerenciador de banco de dados
 db_manager = DatabaseConnectionManager()
+
+@app.route('/check_session', methods=['GET'])
+def check_session():
+    # Obtém o histórico diretamente da sessão
+    history = session.get('history', [])
+    
+    # Verifique se o histórico foi inicializado
+    if history:
+        print("Histórico encontrado:", history)
+    else:
+        print("Nenhum histórico encontrado na sessão.")
+    
+    # Retorna o histórico como JSON
+    return jsonify(history)
+
+
+@app.before_request
+def ensure_history_initialized():
+    print("Verificando a inicialização do histórico...")
+    if 'history' not in session:
+        print("Inicializando histórico na sessão.")
+        session['history'] = []  # Inicializa o histórico
+    else:
+        print(f"Histórico existente na sessão: {session['history']}")
+
+def initialize_history():
+    if 'history' not in session:
+        print("Iniciando sessão de histórico")
+        session['history'] = []
+    else:
+        print("Sessão de histórico ja iniciada")
+
+def save_state(df, operation):
+    # Verifique se o 'history' existe na sessão
+    if 'history' not in session:
+        print("Inicializando 'history' na sessão...")
+        session['history'] = []  # Iniciar o histórico, se não existir
+    print(f'Salvando operação no histórico: {operation}')
+    # Salvar o estado
+    session['history'].append({
+        'data': df.to_dict(orient='records'),
+        'operation': operation
+    })
+    session.modified = True  # Garante que a sessão seja marcada como modificada
+
+@app.route('/get_history', methods=['GET'])
+def get_history():
+    return jsonify(session.get('history', []))
+
+@app.route('/undo', methods=['POST'])
+def undo():
+    history = session.get('history', [])
+    if len(history) > 1:
+        history.pop()  # Remove a última operação
+        session['history'] = history
+        last_state = history[-1]['data']  # Obtém o estado anterior
+        global df
+        df = pd.DataFrame(last_state)  # Restaura o DataFrame
+        return jsonify(last_state)
+    return jsonify({"error": "Nenhuma operação para desfazer"}), 400
+    
 
 @app.route('/set_database', methods=['POST'])
 def set_database():
@@ -209,6 +282,8 @@ def upload_file():
             df = pd.read_csv(StringIO(content), sep=None, on_bad_lines='skip', quotechar='"', skipinitialspace=True)
             
             print(df.head())
+            initialize_history()
+            save_state(df, "Arquivo carregado")
 
             data = df.fillna("null").to_dict(orient='records')
             print("Arquivo CSV lido com sucesso.")
@@ -216,7 +291,6 @@ def upload_file():
         else:
             print("Tipo de arquivo não suportado.")
             return jsonify({"error": "File type not supported"}), 400
-       
         return jsonify(data)
 
     except Exception as e:
@@ -238,11 +312,12 @@ def clean_data():
         return jsonify({"error": str(e)}), 500
 
 @app.route('/calcular_nova_coluna', methods=['POST'])
-def calcular_nova_coluna():   
+def calcular_nova_coluna():
+    global df   
     data = request.json
     print(data.get('formula'))
     print(data.get('new_column'))
-    df = pd.DataFrame(data['data'])
+    df= pd.DataFrame(data['data'])
     formula = data.get('formula')
     new_column_name = data.get('new_column')
     print(formula)
@@ -273,11 +348,10 @@ def calcular_nova_coluna():
 
 @app.route('/transpor', methods=['POST'])
 def transpor():
+    global df
     try:
-        # Recebe os dados da tabela como JSON
         data = request.get_json()
         
-        # Verifica se os dados foram recebidos corretamente
         if 'data' not in data:
             return jsonify({"error": "Dados não fornecidos."}), 400
         
@@ -289,13 +363,8 @@ def transpor():
         # Adiciona os nomes das colunas como a primeira linha
         df = pd.concat([columns_as_first_row, df], ignore_index=True)
         
-        # Transpõe o DataFrame
         df_transposto = df.T
-        
-        # Converte o DataFrame transposto de volta para uma lista de dicionários
         result = df_transposto.to_dict(orient='records')
-        
-        # Retorna os dados transpostos como JSON
         return jsonify(result)
 
     except Exception as e:
@@ -303,9 +372,11 @@ def transpor():
 
 @app.route('/rename_column', methods=['POST'])
 def rename_column():
+    global df
     data = request.json
     current_column = data.get('currentColumn')
     new_column_name = data.get('newColumnName')
+    df = pd.DataFrame(data['rawData'])
 
     if not current_column or not new_column_name:
         return jsonify({"error": "Nome atual e novo nome são necessários."}), 400
@@ -316,6 +387,7 @@ def rename_column():
 
     # Renomeia a coluna
     df.rename(columns={current_column: new_column_name}, inplace=True)
+    save_state(df, f"Renomeou coluna '{current_column}' para '{new_column_name}'")
     print(df.head())
     # Retorne o DataFrame atualizado
     data = df.fillna("null").to_dict(orient='records')
@@ -323,6 +395,7 @@ def rename_column():
 
 @app.route('/replace_value', methods=['POST'])
 def replace_value():
+    global df
     data = request.json
     column = data.get('column')
     old_value = data.get('oldValue')
