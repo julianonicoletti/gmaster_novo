@@ -280,17 +280,25 @@ function carregarBancoDeDados() {
     const dbType = document.getElementById('dbType').value;
     const dbTable = document.getElementById('dbTable').value;
 
+    if (!dbType) {
+        alert("Por favor, selecione o tipo de banco de dados.");
+        return;
+    }
+
     if (!dbTable) {
         alert("Por favor, insira o nome da tabela.");
         return;
     }
 
-    fetch('/set_database', {
+    fetch('/database', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ db_type: dbType })
+        body: JSON.stringify({
+            action: 'set_database', // Primeiro configura o banco
+            db_type: dbType
+        })
     })
     .then(response => response.json())
     .then(data => {
@@ -299,8 +307,16 @@ function carregarBancoDeDados() {
             return;
         }
 
-        fetch(`/load_from_db?table=${encodeURIComponent(dbTable)}`, {
-            method: 'POST'
+        // Configuração bem-sucedida, agora carrega os dados da tabela
+        fetch('/database', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                action: 'load_table',
+                table_name: dbTable
+            })
         })
         .then(response => response.json())
         .then(data => {
@@ -323,3 +339,4 @@ function carregarBancoDeDados() {
         alert('Erro ao configurar o banco de dados.');
     });
 }
+

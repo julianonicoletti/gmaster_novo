@@ -16,148 +16,113 @@ from database_manager import DatabaseConnectionManager
 app = Flask(__name__, template_folder="templates")
 app.secret_key = os.urandom(24)
 
-app.config['SESSION_TYPE'] = 'redis'
-app.config['SESSION_PERMANENT'] = False
-app.config['SESSION_USE_SIGNER'] = True  # Para assinar cookies
-app.config['SESSION_REDIS'] = redis.StrictRedis(host='localhost', port=6379, db=0)
+# app.config['SESSION_TYPE'] = 'redis'
+# app.config['SESSION_PERMANENT'] = False
+# app.config['SESSION_USE_SIGNER'] = True  # Para assinar cookies
+# app.config['SESSION_REDIS'] = redis.StrictRedis(host='localhost', port=6379, db=0)
 
-Session(app)
+# Session(app)
 
 # Instância global do gerenciador de banco de dados
 db_manager = DatabaseConnectionManager()
 
-@app.route('/check_session', methods=['GET'])
-def check_session():
-    # Obtém o histórico diretamente da sessão
-    history = session.get('history', [])
+# @app.route('/check_session', methods=['GET'])
+# def check_session():
+#     # Obtém o histórico diretamente da sessão
+#     history = session.get('history', [])
     
-    # Verifique se o histórico foi inicializado
-    if history:
-        print("Histórico encontrado:", history)
-    else:
-        print("Nenhum histórico encontrado na sessão.")
+#     # Verifique se o histórico foi inicializado
+#     if history:
+#         print("Histórico encontrado:", history)
+#     else:
+#         print("Nenhum histórico encontrado na sessão.")
     
-    # Retorna o histórico como JSON
-    return jsonify(history)
+#     # Retorna o histórico como JSON
+#     return jsonify(history)
 
 
-@app.before_request
-def ensure_history_initialized():
-    print("Verificando a inicialização do histórico...")
-    if 'history' not in session:
-        print("Inicializando histórico na sessão.")
-        session['history'] = []  # Inicializa o histórico
-    else:
-        print(f"Histórico existente na sessão: {session['history']}")
+# @app.before_request
+# def ensure_history_initialized():
+#     print("Verificando a inicialização do histórico...")
+#     if 'history' not in session:
+#         print("Inicializando histórico na sessão.")
+#         session['history'] = []  # Inicializa o histórico
+#     else:
+#         print(f"Histórico existente na sessão: {session['history']}")
 
-def initialize_history():
-    if 'history' not in session:
-        print("Iniciando sessão de histórico")
-        session['history'] = []
-    else:
-        print("Sessão de histórico ja iniciada")
+# def initialize_history():
+#     if 'history' not in session:
+#         print("Iniciando sessão de histórico")
+#         session['history'] = []
+#     else:
+#         print("Sessão de histórico ja iniciada")
 
-def save_state(df, operation):
-    # Verifique se o 'history' existe na sessão
-    if 'history' not in session:
-        print("Inicializando 'history' na sessão...")
-        session['history'] = []  # Iniciar o histórico, se não existir
-    print(f'Salvando operação no histórico: {operation}')
-    # Salvar o estado
-    session['history'].append({
-        'data': df.to_dict(orient='records'),
-        'operation': operation
-    })
-    session.modified = True  # Garante que a sessão seja marcada como modificada
+# def save_state(df, operation):
+#     # Verifique se o 'history' existe na sessão
+#     if 'history' not in session:
+#         print("Inicializando 'history' na sessão...")
+#         session['history'] = []  # Iniciar o histórico, se não existir
+#     print(f'Salvando operação no histórico: {operation}')
+#     # Salvar o estado
+#     session['history'].append({
+#         'data': df.to_dict(orient='records'),
+#         'operation': operation
+#     })
+#     session.modified = True  # Garante que a sessão seja marcada como modificada
 
-@app.route('/get_history', methods=['GET'])
-def get_history():
-    return jsonify(session.get('history', []))
+# @app.route('/get_history', methods=['GET'])
+# def get_history():
+#     return jsonify(session.get('history', []))
 
-@app.route('/undo', methods=['POST'])
-def undo():
-    history = session.get('history', [])
-    if len(history) > 1:
-        history.pop()  # Remove a última operação
-        session['history'] = history
-        last_state = history[-1]['data']  # Obtém o estado anterior
-        global df
-        df = pd.DataFrame(last_state)  # Restaura o DataFrame
-        return jsonify(last_state)
-    return jsonify({"error": "Nenhuma operação para desfazer"}), 400
+# @app.route('/undo', methods=['POST'])
+# def undo():
+#     history = session.get('history', [])
+#     if len(history) > 1:
+#         history.pop()  # Remove a última operação
+#         session['history'] = history
+#         last_state = history[-1]['data']  # Obtém o estado anterior
+#         global df
+#         df = pd.DataFrame(last_state)  # Restaura o DataFrame
+#         return jsonify(last_state)
+#     return jsonify({"error": "Nenhuma operação para desfazer"}), 400
     
 
-@app.route('/set_database', methods=['POST'])
-def set_database():
-    """Rota para configurar o tipo de banco de dados a ser usado"""
+@app.route('/database', methods=['POST'])
+def handle_database_request():
     try:
-        data = request.get_json()
-        if not data or 'db_type' not in data:
+        data = request.json
+        if not data:
+            return jsonify({"error": "Dados não fornecidos na requisição."}), 400
+        
+        action = data.get("action")
+        if action not in ["set_database", "load_table"]:
+            return jsonify({"error": "Ação inválida. Use 'set_database' ou 'load_table'."}), 400
+        
+        if action == "set_database":
+            db_type = data.get("db_type")
+            if not db_type:
+                return jsonify({"error": "Tipo de banco de dados não especificado."}), 400
+            db_manager.configure_connection(db_type)
             return jsonify({
-                "error": "Tipo de banco de dados não especificado no corpo da requisição"
-            }), 400
-            
-        db_type = data['db_type']
-        print(f"Tentando configurar conexão para banco de dados: {db_type}")
+                "message": f"Conexão configurada com sucesso para {db_type}",
+                "db_type": db_type
+            })
         
-        db_manager.get_db_connection(db_type)
-        
-        return jsonify({
-            "message": f"Conexão estabelecida com sucesso para {db_type}",
-            "db_type": db_type
-        })
-        
+        elif action == "load_table":
+            table_name = data.get("table_name")
+            if not table_name:
+                return jsonify({"error": "Nome da tabela não fornecido."}), 400
+            data = db_manager.load_table_data(table_name)
+            return jsonify({
+                "message": f"Dados carregados com sucesso da tabela '{table_name}'",
+                "data": data,
+                "row_count": len(data)
+            })
+    
     except ValueError as e:
-        print(f"Erro de validação: {str(e)}")
-        return jsonify({
-            "error": str(e),
-            "supported_dbs": list(db_manager.supported_dbs.keys())
-        }), 400
-        
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
-        print(f"Erro ao configurar banco de dados: {str(e)}")
-        return jsonify({
-            "error": f"Erro ao configurar conexão com o banco de dados: {str(e)}"
-        }), 500
-
-@app.route('/load_from_db', methods=['POST'])
-def load_from_db():
-    """Rota para carregar dados de uma tabela específica"""
-    try:
-        if not db_manager.engine:
-            return jsonify({
-                "error": "Conexão com banco de dados não configurada. Use /set_database primeiro."
-            }), 400
-            
-        table_name = request.args.get("table")
-        if not table_name:
-            return jsonify({
-                "error": "Nome da tabela não fornecido na URL"
-            }), 400
-
-        print(f"Tentando carregar dados da tabela: {table_name}")
-        print(f"Usando banco de dados: {db_manager.current_db_type}")
-        
-        df = pd.read_sql_table(table_name, con=db_manager.engine)
-        df = df.map(lambda x: None if isinstance(x, float) and np.isnan(x) else x)
-        
-        for col in df.select_dtypes(include=['datetime64']):
-            df[col] = df[col].astype(str)
-        data = df.fillna("null").to_dict(orient='records')
-        #data = df.to_dict(orient="records")
-        
-        print(f"Dados carregados com sucesso: {len(data)} registros encontrados")
-        return jsonify({
-            "message": "Dados carregados com sucesso",
-            "data": data,
-            "row_count": len(data)
-        })
-    
-    except Exception as e:
-        print(f"Erro ao carregar dados do banco de dados: {str(e)}")
-        return jsonify({
-            "error": f"Erro ao carregar dados do banco de dados: {str(e)}"
-        }), 500
+        return jsonify({"error": f"Erro inesperado: {str(e)}"}), 500
 
 @app.route('/')
 def index():

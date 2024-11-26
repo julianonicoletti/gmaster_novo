@@ -2,6 +2,8 @@ import os
 from dotenv import load_dotenv
 from pathlib import Path
 from sqlalchemy import create_engine
+import pandas as pd
+import numpy as np
 
 class DatabaseConnectionManager:
     def __init__(self):
@@ -25,26 +27,17 @@ class DatabaseConnectionManager:
         }
         self.current_db_type = None
         self.engine = None
-        
+
     def load_db_config(self, db_type: str):
-        """Carrega configurações do banco de dados especificado"""
         if db_type not in self.supported_dbs:
             raise ValueError(f"Tipo de banco de dados não suportado. Opções válidas: {list(self.supported_dbs.keys())}")
             
         db_config = self.supported_dbs[db_type]
-        base_dir = Path(__file__).resolve().parent
-        env_path = base_dir / db_config['env_file']
-               
-        print(f"Tentando carregar configurações de: {env_path.absolute()}")
-        
-        # Adicione uma verificação se o arquivo existe
+        env_path = Path(__file__).resolve().parent / db_config['env_file']
         if not env_path.exists():
-            print(f"Arquivo de configuração {env_path} não encontrado.")
             raise FileNotFoundError(f"Arquivo de configuração {env_path} não encontrado.")
         
-        # Tentar carregar o arquivo .env com verbose
         load_dotenv(dotenv_path=env_path, verbose=True)
-
         config = {
             'user': os.getenv('DB_USER'),
             'password': os.getenv('DB_PASSWORD'),
@@ -52,25 +45,26 @@ class DatabaseConnectionManager:
             'port': os.getenv('DB_PORT'),
             'database': os.getenv('DB_NAME')
         }
-        
-        print(f"Configurações carregadas: DB_USER={config['user']}, DB_HOST={config['host']}, DB_NAME={config['database']}")
-        
         return config, db_config['connection_string']
     
-    def get_db_connection(self, db_type: str):
-        """Cria e retorna uma conexão com o banco de dados especificado"""
-        try:
-            config, connection_string = self.load_db_config(db_type)
-            
-            if db_type == 'sqlite':
-                self.engine = create_engine(connection_string.format(database=config['database']))
-            else:
-                self.engine = create_engine(connection_string.format(**config))
-            
-            self.current_db_type = db_type
-            return self.engine
-            
-        except Exception as e:
-            print(f"Erro ao conectar ao banco de dados {db_type}: {e}")
-            raise
-
+    def configure_connection(self, db_type: str):
+        """Configura a conexão com o banco de dados."""
+        config, connection_string = self.load_db_config(db_type)
+        if db_type == 'sqlite':
+            self.engine = create_engine(connection_string.format(database=config['database']))
+        else:
+            self.engine = create_engine(connection_string.format(**config))
+        self.current_db_type = db_type
+    
+    def load_table_data(self, table_name: str):
+        """Carrega os dados de uma tabela do banco configurado."""
+        if not self.engine:
+            raise ValueError("Conexão com o banco de dados não configurada.")
+        if not table_name:
+            raise ValueError("Nome da tabela não fornecido.")
+        
+        df = pd.read_sql_table(table_name, con=self.engine)
+        # df = df.map(lambda x: None if isinstance(x, float) and np.isnan(x) else x)
+        for col in df.select_dtypes(include=['datetime64']):
+            df[col] = df[col].astype(str)
+        return df.fillna("null").to_dict(orient='records')
