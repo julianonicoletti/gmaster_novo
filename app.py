@@ -4,7 +4,7 @@ import pandas as pd
 import redis
 import os
 import numpy as np
-import xml.etree.ElementTree as ElementTree
+import xml.etree.ElementTree as ET
 from io import StringIO, BytesIO
 import chardet
 import re
@@ -229,12 +229,20 @@ def upload_file():
 
         elif file.filename.endswith('.xml'):
             print("Tentando ler o arquivo XML...")
-            import xml.etree.ElementTree as ET
-            tree = ET.parse(file)
-            root = tree.getroot()
-            data = [{child.tag: child.text for child in elem} for elem in root]
-            df = pd.DataFrame(data)
-            print("Arquivo XML lido com sucesso.")
+            try:
+                # Lê o XML diretamente como DataFrame
+                df = pd.read_xml(BytesIO(file.read()))
+
+                # Exibe as primeiras linhas
+                print("Primeiras linhas do DataFrame:")
+                print(df.head())
+                
+                # Preenche valores nulos e converte para dicionário
+                data = df.fillna("null").to_dict(orient='records')
+                print("Arquivo XML lido com sucesso.")
+            except ValueError as e:
+                print(f"Erro ao processar o arquivo XML com Pandas: {e}")
+                data = []
 
         elif file.filename.endswith('.csv'):
             print("Tentando ler o arquivo CSV...")
@@ -247,15 +255,36 @@ def upload_file():
             df = pd.read_csv(StringIO(content), sep=None, on_bad_lines='skip', quotechar='"', skipinitialspace=True)
             
             print(df.head())
-            initialize_history()
-            save_state(df, "Arquivo carregado")
+            # initialize_history()
+            # save_state(df, "Arquivo carregado")
 
             data = df.fillna("null").to_dict(orient='records')
             print("Arquivo CSV lido com sucesso.")
+            
+        elif file.filename.endswith('.txt'):
+            try:
+                print("Tentando ler o arquivo TXT...")
+                # Lê o arquivo como um DataFrame, ignorando a coluna inicial e final (delimitadores vazios)
+                df = pd.read_csv(BytesIO(file.read()), sep='|', header=None, engine='python')
+                
+                # Remove as colunas vazias (delimitadores extras no início e fim)
+                df = df.iloc[:, 1:-1]
+
+                # Exibe as primeiras linhas para depuração
+                print("Primeiras linhas do DataFrame:")
+                print(df.head())
+                data = df.fillna("null").to_dict(orient='records')
+                print("Arquivo XML lido com sucesso.")
+                
+                
+            except Exception as e:
+                print(f"Erro ao processar o arquivo TXT: {e}")
+                return None
 
         else:
             print("Tipo de arquivo não suportado.")
             return jsonify({"error": "File type not supported"}), 400
+        
         return jsonify(data)
 
     except Exception as e:
