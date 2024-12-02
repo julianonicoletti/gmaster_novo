@@ -381,7 +381,7 @@ def rename_column():
 
     # Renomeia a coluna
     df.rename(columns={current_column: new_column_name}, inplace=True)
-    save_state(df, f"Renomeou coluna '{current_column}' para '{new_column_name}'")
+    # save_state(df, f"Renomeou coluna '{current_column}' para '{new_column_name}'")
     print(df.head())
     # Retorne o DataFrame atualizado
     data = df.fillna("null").to_dict(orient='records')

@@ -57,6 +57,7 @@ class DatabaseConnectionManager:
         self.current_db_type = db_type
     
     def load_table_data(self, table_name: str):
+        
         """Carrega os dados de uma tabela do banco configurado."""
         if not self.engine:
             raise ValueError("Conexão com o banco de dados não configurada.")
@@ -64,7 +65,9 @@ class DatabaseConnectionManager:
             raise ValueError("Nome da tabela não fornecido.")
         
         df = pd.read_sql_table(table_name, con=self.engine)
-        # df = df.map(lambda x: None if isinstance(x, float) and np.isnan(x) else x)
+        print(df.head())
+        df = df.map(lambda x: None if isinstance(x, float) and np.isnan(x) else x)
         for col in df.select_dtypes(include=['datetime64']):
             df[col] = df[col].astype(str)
+        df = df.applymap(lambda x: list(x) if isinstance(x, set) else x)
         return df.fillna("null").to_dict(orient='records')

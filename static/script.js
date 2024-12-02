@@ -14,17 +14,18 @@ function initializeTable(data) {
 
     $('#data-table').DataTable({
         data: data,
-        columns: Object.keys(data[0] || {}).map(key => ({ title: key, data: key })),
+        columns: Object.keys(data[0]).map(key => ({ title: key, data: key })),
         paging: true,
         searching: true,
         ordering: true,
         autoWidth: true,
-        scrollX: true,   // Habilita a rolagem horizontal
-        scrollY: '90vh', // Limita a altura da tabela (opcional)
-        scrollCollapse: true, // Reduz a tabela caso não haja dados suficientes
-        fixedHeader: true  // Fixa o cabeçalho da tabela quando rolar
+        // scrollX: true,
+        // scrollY: '90vh',
+        // scrollCollapse: true,
+        // fixedHeader: true
     });
 }
+
 
 function updateHistory(operation) {
     const historyList = document.getElementById('historyList');
@@ -326,6 +327,7 @@ function carregarBancoDeDados() {
                 alert(`Dados carregados com sucesso: ${data.row_count} registros encontrados.`);
                 rawData = data.data; // Atualiza os dados carregados
                 initializeTable(rawData); // Atualiza a tabela
+                console.log("Dados carregados:", rawData);
                 closeDatabaseModal();
             }
         })
